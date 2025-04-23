@@ -1,0 +1,104 @@
+@baseUrl = https://localhost:7083
+@contentType = application/json
+
+### Seed the database
+POST {{baseUrl}}/api/demo/seed
+Content-Type: {{contentType}}
+
+### Query JSON data
+GET {{baseUrl}}/api/demo/json-query
+Content-Type: {{contentType}}
+
+### Run bulk operations
+POST {{baseUrl}}/api/demo/bulk-operations
+Content-Type: {{contentType}}
+
+### Query temporal data
+GET {{baseUrl}}/api/demo/temporal-query/1
+Content-Type: {{contentType}}
+
+### Get audit logs
+GET {{baseUrl}}/api/demo/audit-logs
+Content-Type: {{contentType}}
+
+### Demonstrate TPT inheritance
+GET {{baseUrl}}/api/demo/tpt-inheritance
+Content-Type: {{contentType}}
+
+### Demonstrate soft delete
+GET {{baseUrl}}/api/demo/soft-delete
+Content-Type: {{contentType}}
+
+### Health check
+GET https://localhost:7001/api/AdvancedOperations/health-check
+Accept: application/json
+
+### Get products with details
+GET https://localhost:7001/api/AdvancedOperations/product-details?includeInventory=true&includeSalesHistory=true
+Accept: application/json
+
+### Get paginated products - page 1
+GET https://localhost:7001/api/AdvancedOperations/products/1?pageSize=5
+Accept: application/json
+
+### Get paginated products - page 2
+GET https://localhost:7001/api/AdvancedOperations/products/2?pageSize=5
+Accept: application/json
+
+### Get low stock products
+GET https://localhost:7001/api/AdvancedOperations/low-stock?threshold=15
+Accept: application/json
+
+### Update inventory in batch
+POST https://localhost:7001/api/AdvancedOperations/batch-inventory-update
+Content-Type: application/json
+
+{
+  "1": 5,
+  "2": -2,
+  "3": 10
+}
+
+### Apply migrations
+POST https://localhost:7001/api/AdvancedOperations/apply-migrations
+Accept: application/json
+
+### Repository - Get all products
+GET https://localhost:7001/api/AdvancedOperations/repository/products
+Accept: application/json
+
+### Repository - Get product by ID
+GET https://localhost:7001/api/AdvancedOperations/repository/products/1
+Accept: application/json
+
+### Repository - Create product
+POST https://localhost:7001/api/AdvancedOperations/repository/products
+Content-Type: application/json
+
+{
+  "name": "Smart Watch",
+  "quantity": 25,
+  "price": 299.99,
+  "createdAt": "2025-04-17T00:00:00Z",
+  "updatedAt": "2025-04-17T00:00:00Z",
+  "validFrom": "2025-04-17T00:00:00Z",
+  "validTo": "9999-12-31T23:59:59Z"
+}
+
+### Repository - Update product
+PUT https://localhost:7001/api/AdvancedOperations/repository/products/1
+Content-Type: application/json
+
+{
+  "id": 1,
+  "name": "Laptop Pro",
+  "quantity": 15,
+  "price": 1499.99,
+  "createdAt": "2025-04-17T00:00:00Z",
+  "updatedAt": "2025-04-17T00:00:00Z",
+  "validFrom": "2025-04-17T00:00:00Z",
+  "validTo": "9999-12-31T23:59:59Z"
+}
+
+### Repository - Delete product
+DELETE https://localhost:7001/api/AdvancedOperations/repository/products/4
