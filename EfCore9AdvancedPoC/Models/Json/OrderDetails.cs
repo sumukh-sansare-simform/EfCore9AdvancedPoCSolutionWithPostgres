@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace EfCore9AdvancedPoCWithPostgres.Models.Json
 {
     public class OrderDetails

@@ -1,7 +1,6 @@
-﻿using EfCore9AdvancedPoC.Models;
-using Microsoft.EntityFrameworkCore.Diagnostics;
+﻿using EfCore9AdvancedPoCWithPostgres.Models;
 using Microsoft.EntityFrameworkCore;
-using EfCore9AdvancedPoCWithPostgres.Models;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace EfCore9AdvancedPoCWithPostgres.Interceptors
 {
@@ -35,5 +34,4 @@ namespace EfCore9AdvancedPoCWithPostgres.Interceptors
             return await base.SavingChangesAsync(eventData, result, cancellationToken);
         }
     }
-
 }

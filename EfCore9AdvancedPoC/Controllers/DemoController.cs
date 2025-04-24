@@ -1,12 +1,12 @@
+using EfCore9AdvancedPoC.Models.Inheritance;
+using EfCore9AdvancedPoCWithPostgres.Data;
 using EfCore9AdvancedPoCWithPostgres.Models;
 using EfCore9AdvancedPoCWithPostgres.Models.Inheritance;
 using EfCore9AdvancedPoCWithPostgres.Models.Json;
 using EfCore9AdvancedPoCWithPostgres.Models.Relationships;
-using EfCore9AdvancedPoCWithPostgres.Data;
 using EfCore9AdvancedPoCWithPostgres.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using EfCore9AdvancedPoC.Models.Inheritance;
 
 namespace EfCore9AdvancedPoCWithPostgres.Controllers
 {

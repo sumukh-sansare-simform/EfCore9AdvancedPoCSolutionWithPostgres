@@ -1,4 +1,3 @@
-using EfCore9AdvancedPoC.Models;
 using EfCore9AdvancedPoCWithPostgres.Models;
 using EfCore9AdvancedPoCWithPostgres.Repositories;
 using EfCore9AdvancedPoCWithPostgres.Services;

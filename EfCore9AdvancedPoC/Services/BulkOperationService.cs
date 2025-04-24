@@ -135,20 +135,6 @@ namespace EfCore9AdvancedPoCWithPostgres.Services
 
             return await query.ToListAsync();
         }
-        // Add this method to BulkOperationService.cs
-        public async Task<bool> ApplyMigrationsAsync()
-        {
-            try
-            {
-                await _context.Database.MigrateAsync();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                // Log exception
-                return false;
-            }
-        }
         // Add these methods to BulkOperationService.cs
         public async Task<(List<Product> Items, int TotalCount)> GetPaginatedProductsAsync(
             int pageNumber = 1,

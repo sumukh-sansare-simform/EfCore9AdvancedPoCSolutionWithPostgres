@@ -1,4 +1,3 @@
-using EfCore9AdvancedPoC.Models;
 using EfCore9AdvancedPoCWithPostgres.Data;
 using EfCore9AdvancedPoCWithPostgres.Models;
 using Microsoft.EntityFrameworkCore;
