@@ -1,6 +1,7 @@
 using EfCore9AdvancedPoCWithPostgres.Data;
 using EfCore9AdvancedPoCWithPostgres.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace EfCore9AdvancedPoCWithPostgres.Repositories
 {
@@ -19,10 +20,44 @@ namespace EfCore9AdvancedPoCWithPostgres.Repositories
         public async Task<Product> GetByIdAsync(int id) => 
             await _context.Products.FindAsync(id);
             
-        public async Task<List<Product>> GetByIdsAsync(IEnumerable<int> ids) => 
-            await _context.Products.Where(p => ids.Contains(p.Id)).ToListAsync();
+        public async Task<List<Product>> FindAsync(Expression<Func<Product, bool>> predicate) => 
+            await _context.Products.Where(predicate).ToListAsync();
 
-        // Add this to your ProductRepository.cs
+        public async Task<List<Product>> GetProductsWithDetailsAsync()
+        {
+            return await _context.Products
+                .Include(p => p.ProductDetail)
+                .ToListAsync();
+        }
+
+        public async Task<List<Product>> GetProductsWithTagsAsync()
+        {
+            return await _context.Products
+                .Include(p => p.Tags)
+                .ToListAsync();
+        }
+
+        public async Task<List<Product>> GetRecentlyViewedProductsAsync(TimeSpan timeSpan)
+        {
+            // Calculate the cut-off time on the C# side
+            var cutoffTime = DateTime.UtcNow.AddTicks(-timeSpan.Ticks);
+
+            // Then use the calculated time in the query
+            return await _context.Products
+                .Where(p => EF.Property<DateTime>(p, "LastViewedAt") > cutoffTime)
+                .ToListAsync();
+        }
+
+        public async Task SetLastViewedAtAsync(int productId)
+        {
+            var product = await GetByIdAsync(productId);
+            if (product != null)
+            {
+                _context.Entry(product).Property("LastViewedAt").CurrentValue = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
+            }
+        }
+
         public async Task<Product> AddAsync(Product product)
         {
             // Fix circular reference between Product and ProductDetail
@@ -45,7 +80,6 @@ namespace EfCore9AdvancedPoCWithPostgres.Repositories
             return product;
         }
 
-        // Also update the UpdateAsync method to handle the same issue
         public async Task<int> UpdateAsync(Product product)
         {
             // First, fetch the existing product including its details to properly track changes
@@ -84,27 +118,27 @@ namespace EfCore9AdvancedPoCWithPostgres.Repositories
                 existingProduct.ProductDetail.Product = existingProduct;
             }
 
-            // Handle ProductTags if needed
-            if (product.ProductTags != null && product.ProductTags.Any())
-            {
-                // This would need more complex logic to properly handle adding/removing tags
-                // For now, we're not updating tags in this example
-            }
-
             return await _context.SaveChangesAsync();
         }
 
-
-        public async Task<int> DeleteAsync(int id)
+        public async Task<int> DeleteAsync(Product entity)
+        {
+            _context.Products.Remove(entity);
+            return await _context.SaveChangesAsync();
+        }
+        
+        public async Task<int> DeleteByIdAsync(int id)
         {
             var product = await GetByIdAsync(id);
             if (product == null) return 0;
             
-            _context.Products.Remove(product);
-            return await _context.SaveChangesAsync();
+            return await DeleteAsync(product);
         }
         
         public async Task<bool> ExistsAsync(int id) => 
             await _context.Products.AnyAsync(p => p.Id == id);
+
+        public async Task<int> CountAsync() =>
+            await _context.Products.CountAsync();
     }
 }

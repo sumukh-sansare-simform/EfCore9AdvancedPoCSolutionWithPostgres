@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using EfCore9AdvancedPoCWithPostgres.Models.Relationships;
 
 namespace EfCore9AdvancedPoCWithPostgres.Models
@@ -19,10 +17,10 @@ namespace EfCore9AdvancedPoCWithPostgres.Models
 
         // Table splitting - shared primary key relationship
         public ProductDetail ProductDetail { get; set; }
-        
+
         // Navigation collections
         public ICollection<ProductTag> ProductTags { get; set; } = new List<ProductTag>();
-        
+
         // Skip navigation for many-to-many
         public ICollection<Tag> Tags { get; set; } = new List<Tag>();
     }

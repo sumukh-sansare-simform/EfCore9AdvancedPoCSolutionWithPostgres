@@ -7,12 +7,18 @@ namespace EfCore9AdvancedPoCWithPostgres.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class AdvancedOperationsController(
-        BulkOperationService bulkService,
-        IProductRepository productRepository) : ControllerBase
+    public class AdvancedOperationsController : ControllerBase
     {
-        private readonly BulkOperationService _bulkService = bulkService;
-        private readonly IProductRepository _productRepository = productRepository;
+        private readonly BulkOperationService _bulkService;
+        private readonly IProductRepository _productRepository;
+
+        public AdvancedOperationsController(
+            BulkOperationService bulkService,
+            IProductRepository productRepository)
+        {
+            _bulkService = bulkService;
+            _productRepository = productRepository;
+        }
 
         [HttpGet("health-check")]
         public async Task<IActionResult> CheckHealth()
@@ -26,8 +32,11 @@ namespace EfCore9AdvancedPoCWithPostgres.Controllers
             [FromQuery] bool includeInventory = false,
             [FromQuery] bool includeSalesHistory = false)
         {
-            var products = await _bulkService.GetProductsWithFullDetailsAsync(
-                includeInventory, includeSalesHistory);
+            var products = includeInventory
+                ? await _productRepository.GetProductsWithDetailsAsync()
+                : includeSalesHistory
+                    ? await _productRepository.GetProductsWithTagsAsync()
+                    : await _productRepository.GetAllAsync();
 
             return Ok(new
             {
@@ -39,15 +48,21 @@ namespace EfCore9AdvancedPoCWithPostgres.Controllers
         [HttpGet("products/{page}")]
         public async Task<IActionResult> GetPaginatedProducts(int page = 1, [FromQuery] int pageSize = 10)
         {
-            var result = await _bulkService.GetPaginatedProductsAsync(page, pageSize);
+            var allProducts = await _productRepository.GetAllAsync();
+            var totalCount = allProducts.Count;
+            
+            var pagedItems = allProducts
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
 
             return Ok(new
             {
                 Page = page,
                 PageSize = pageSize,
-                TotalItems = result.TotalCount,
-                TotalPages = (int)Math.Ceiling(result.TotalCount / (double)pageSize),
-                result.Items
+                TotalItems = totalCount,
+                TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize),
+                Items = pagedItems
             });
         }
 
@@ -59,7 +74,19 @@ namespace EfCore9AdvancedPoCWithPostgres.Controllers
                 return BadRequest("No inventory changes provided");
             }
 
-            var updatedCount = await _bulkService.BatchUpdateProductInventoryAsync(inventoryChanges);
+            int updatedCount = 0;
+
+            foreach (var change in inventoryChanges)
+            {
+                var product = await _productRepository.GetByIdAsync(change.Key);
+                if (product != null)
+                {
+                    product.Quantity += change.Value;
+                    product.UpdatedAt = DateTime.UtcNow;
+                    await _productRepository.UpdateAsync(product);
+                    updatedCount++;
+                }
+            }
 
             return Ok(new
             {
@@ -176,7 +203,7 @@ namespace EfCore9AdvancedPoCWithPostgres.Controllers
             if (!await _productRepository.ExistsAsync(id))
                 return NotFound();
 
-            await _productRepository.DeleteAsync(id);
+            await _productRepository.DeleteByIdAsync(id);
             return NoContent();
         }
     }

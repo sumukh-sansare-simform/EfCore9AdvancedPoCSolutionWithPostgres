@@ -10,10 +10,19 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddScoped<AuditInterceptor>();
-builder.Services.AddScoped<BulkOperationService>();
 
-// Register Repository and Query classes
+// Register Repositories
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
+builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
+builder.Services.AddScoped<IBaseEntityRepository, BaseEntityRepository>();
+builder.Services.AddScoped<ITagRepository, TagRepository>();
+
+// Register Services
+builder.Services.AddScoped<BulkOperationService>();
+builder.Services.AddScoped<DataSeedingService>();
 
 builder.Services.AddDbContext<AppDbContext>((serviceProvider, options) =>
 {
@@ -22,15 +31,12 @@ builder.Services.AddDbContext<AppDbContext>((serviceProvider, options) =>
     options.UseNpgsql(connectionString);
 });
 
-// Fixed: Single AddControllers call with all options
+// Configure JSON options
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
-        // Configure JSON serialization options
         options.JsonSerializerOptions.WriteIndented = true;
         options.JsonSerializerOptions.PropertyNamingPolicy = null;
-
-        // Add this line to handle circular references
         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
     });
 
@@ -51,12 +57,11 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    // Add Swagger middleware
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "EF Core 9 Advanced PoC v1");
-        c.RoutePrefix = string.Empty; // To serve the Swagger UI at the app's root
+        c.RoutePrefix = string.Empty;
     });
 }
 
@@ -67,13 +72,9 @@ app.MapControllers();
 // Apply migrations at startup in development environments
 if (app.Environment.IsDevelopment())
 {
-    using (var scope = app.Services.CreateScope())
-    {
-        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
-        // Comment out or remove this line if you're using Option 2 above
-        dbContext.Database.Migrate();
-    }
+    using var scope = app.Services.CreateScope();
+    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    dbContext.Database.Migrate();
 }
 
 app.Run();
