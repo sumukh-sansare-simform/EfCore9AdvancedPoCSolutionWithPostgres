@@ -249,6 +249,92 @@ The application will start and be available at:
 - **Interceptors**:
   - `AuditInterceptor`: Automatic audit logging
 
+```markdown
+## Database Structure
+
+This application uses a relational database with the following entity relationships:
+
+### Core Entity Relationships
+
+
+```
+Users ───< Orders >─── Products ───< ProductDetails
+                       │
+                       └──< ProductTags >── Tags
+
+```
+
+### Employee Hierarchy and Inheritance Structure
+
+
+```
+Employees ───┬─< self (ManagerId)
+             └─ BaseEntity (TPT) ──< EmployeeEntity / CustomerEntity
+
+```
+
+### Detailed Entity Relationships
+
+#### Users and Orders
+- `User` (1) → (Many) `Order`: One user can place many orders
+- `User` contains `UserPreferences` as owned entity stored as JSON
+
+#### Orders
+- `Order` (Many) ← (1) `Product`: Each order references one product
+- `Order` contains `OrderDetails` as JSON data
+- `Order` includes `ShippingAddress` as owned entity 
+
+#### Products
+- `Product` (1) → (1) `ProductDetail`: Table splitting relationship with shared primary key
+- `Product` (Many) ↔ (Many) `Tag`: Many-to-many relationship through `ProductTag` join entity
+- `Product` includes temporal data tracking with `ValidFrom` and `ValidTo` columns
+
+#### Employees
+- `Employee` (Many) → (1) `Employee`: Self-referencing relationship for manager hierarchy
+  - `ManagerId` in `Employee` references another `Employee`
+  - `DirectReports` collection represents employees reporting to a manager
+
+#### TPT (Table-Per-Type) Inheritance
+- `BaseEntity`: Abstract base class with common properties
+  - `EmployeeEntity`: Specialized employee data with department and position
+  - `CustomerEntity`: Specialized customer data with encrypted email
+
+#### Audit Logging
+- `AuditLog`: Records entity changes through interceptors
+  - Captures table name, operation type, and timestamp
+
+### Database Schema Details
+
+| Entity          | PK/FK Relationship | Notes                                           |
+|-----------------|--------------------|-------------------------------------------------|
+| Users           | PK: Id             | Includes soft delete flag and JSON preferences   |
+| Orders          | PK: Id, FK: UserId, ProductId | Contains JSON order details          |
+| Products        | PK: Id             | Includes temporal data tracking                 |
+| ProductDetails  | PK/FK: ProductId   | Table splitting with Product                    |
+| Tags            | PK: Id             | Product categorization                          |
+| ProductTags     | PK: ProductId+TagId| Junction table with metadata                    |
+| Employees       | PK: Id, FK: ManagerId | Self-referencing relationship               |
+| BaseEntities    | PK: Id             | Base table for inheritance                      |
+| EmployeeEntities| PK/FK: Id          | TPT inheritance from BaseEntity                |
+| CustomerEntities| PK/FK: Id          | TPT inheritance with encrypted email            |
+| AuditLogs       | PK: Id             | Automatic change tracking                       |
+
+### Special Features
+
+- **JSON Storage**: User preferences and order details stored as JSON
+- **Table Splitting**: Product and ProductDetail entities map to same table
+- **TPT Inheritance**: Base and derived entities in separate tables with shared key
+- **Self-Referencing**: Employee hierarchy with manager references
+- **Many-to-Many**: Products and Tags with additional metadata in junction table
+- **Column Encryption**: Customer email encrypted using AES
+- **Soft Delete**: Users have IsDeleted flag with global query filter
+- **Temporal Data**: Products track history with period columns
+- **Shadow Properties**: LastViewedAt tracked but not in entity class
+
+```
+
+This comprehensive database structure section clearly outlines all the relationships in your application, including the one-to-many, many-to-many, inheritance, and special modeling features. The diagram follows your requested format and provides useful details about the data model design.
+
 ## Required Configuration Details
 
 ### Database Schema Configuration
